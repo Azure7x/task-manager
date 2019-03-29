@@ -25,3 +25,18 @@ app.use(taskRouter);
 app.listen(port, () => {
   console.log('Server is up on port ' + port);
 });
+
+const Task = require('./models/task');
+const User = require('./models/user');
+
+const main = async () => {
+  // const task = await Task.findById('5c9d8eafe000a26fc422d7cc');
+  // await task.populate('owner').execPopulate();
+  // console.log(task.owner);
+  const user = await User.findById('5c9d8d5e31713d7ee881d092');
+  await user.populate('tasks').execPopulate();
+  console.log(user.tasks);
+
+};
+
+main();
