@@ -24,13 +24,29 @@ router.post('/tasks', auth, async (req, res) => {
   // });
 });
 
+//GET /tasks?completed=true
+//GET /tasks?limit=10&skip=0
 router.get('/tasks', auth, async (req, res) => {
+  const match = {}
+
+  if(req.query.completed) {
+    match.completed = req.query.completed === 'true';
+  }
+
   try {
     // const user = await User.findById('5c9d8d5e31713d7ee881d092');
     // await user.populate('tasks').execPopulate();
     // console.log(user.tasks);
 
-    await req.user.populate('tasks').execPopulate();
+
+    await req.user.populate({
+      path: 'tasks',
+      match,
+      options: {
+        limit: parseInt(req.query.limit),
+        skip: parseInt(req.query.skip)
+      }
+    }).execPopulate();
 
     // const tasks = await Task.find({owner: req.user._id});
     res.send(req.user.tasks);
