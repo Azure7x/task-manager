@@ -47,7 +47,10 @@ const userSchema = new mongoose.Schema({
       type: String,
       required: true
     }
-  }]
+  }],
+  avatar: {
+    type: Buffer
+  }
 }, {
   timestamps: true
 });
@@ -62,8 +65,11 @@ userSchema.methods.toJSON = function() {
   const user = this;
   const userObject = user.toObject();
 
+//removes sensitive info from object before sending back
   delete userObject.password;
   delete userObject.tokens;
+  //removes image because its a large file and would slow things down
+  delete userObject.avatar;
 
   return userObject;
 };
