@@ -6,7 +6,9 @@ const auth = require('../middleware/auth');
 const {sendWelcomeEmail, sendCancelationEmail} = require('../emails/account');
 const router = new express.Router();
 
+//route used to save new user
 router.post('/users', async (req, res) => {
+  //creates new user based on User model
   const user = new User(req.body);
 
   try {
@@ -17,14 +19,9 @@ router.post('/users', async (req, res) => {
   } catch(e) {
     res.status(400).send(e);
   }
-
-  // user.save().then(() => {
-  //   res.status(201).send(user);
-  // }).catch((e) => {
-  //   res.status(400).send(e);
-  // })
 });
 
+//route used to login user
 router.post('/users/login', async (req, res) => {
   try {
     const user = await User.findByCredentials(req.body.email, req.body.password);
@@ -35,10 +32,11 @@ router.post('/users/login', async (req, res) => {
   }
 });
 
+//route used to logout current user if authorized
 router.post('/users/logout', auth, async (req, res) => {
   try {
     req.user.tokens = req.user.tokens.filter((token) => {
-      return token.token !== req.token;
+    return token.token !== req.token;
     });
 
     await req.user.save();
@@ -49,6 +47,7 @@ router.post('/users/logout', auth, async (req, res) => {
   }
 });
 
+//route removes all tokens logging out every session if authorized
 router.post('/users/logoutall', auth, async (req, res) => {
   try {
     req.user.tokens = [];
@@ -60,11 +59,12 @@ router.post('/users/logoutall', auth, async (req, res) => {
   }
 });
 
+//route shows user profile if authorized
 router.get('/users/me', auth, async (req, res) => {
-  debugger
   res.send(req.user);
 });
 
+//route updates user information if authorized
 router.patch('/users/me', auth, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ['name', 'email', 'password', 'age'];
@@ -77,19 +77,10 @@ router.patch('/users/me', auth, async (req, res) => {
   }
 
   try {
-    //new option returns the new user instead of the old one
-    //runValidators reruns the validators again to make sure the data is valid
-    //const user = await User.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true});
-
-    //const user = await User.findById(req.user._id);
-
+    //uses bracket notation to update user
     updates.forEach((update) => req.user[update] = req.body[update]);
 
     await req.user.save();
-
-    // if(!user) {
-    //   return res.status(404).send();
-    // }
 
     res.send(req.user);
   } catch(e) {
@@ -97,12 +88,9 @@ router.patch('/users/me', auth, async (req, res) => {
   }
 });
 
+//route deletes the current user if authorized
 router.delete('/users/me', auth, async (req, res) => {
   try {
-    // const user = await User.findByIdAndDelete(req.user._id);
-    // if(!user) {
-    //   return res.status(404).send();
-    // }
     await req.user.remove();
     sendCancelationEmail(req.user.email, req.user.name);
     res.send(req.user);
@@ -125,7 +113,7 @@ const upload = multer({
   }
 });
 
-
+//route uploads an avatar image for the user if authorized
 router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
   const buffer = await sharp(req.file.buffer).resize({width: 250, height: 250}).png().toBuffer();
 
@@ -136,6 +124,7 @@ router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) 
   res.status(400).send({error: error.message});
 });
 
+//route deletes the uploaded avatar image if authorized
 router.delete('/users/me/avatar', auth, async (req, res) => {
   try {
     req.user.avatar = undefined;
@@ -146,6 +135,7 @@ router.delete('/users/me/avatar', auth, async (req, res) => {
   }
 });
 
+//route gets the avatar image to show
 router.get('/user/:id/avatar', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
