@@ -1,10 +1,12 @@
+
+
 const express = require('express');
 const Task = require('../models/task');
 const auth = require('../middleware/auth');
 const router = new express.Router();
 
+//route creates a new task for the user
 router.post('/tasks', auth, async (req, res) => {
-  // const task = new Task(req.body);
   const task = new Task({
     ...req.body,
     owner: req.user._id
@@ -16,17 +18,12 @@ router.post('/tasks', auth, async (req, res) => {
   } catch(e) {
     res.status(404).send();
   }
-
-  // task.save().then(() => {
-  //   res.status(201).send(task);
-  // }).catch((e) => {
-  //   res.status(404).send();
-  // });
 });
 
 //GET /tasks?completed=true
 //GET /tasks?limit=10&skip=0
 //GET /tasks?sortBy=createdAt:desc
+//route gets all tasks for authorized used and sorts or limits them
 router.get('/tasks', auth, async (req, res) => {
   const match = {};
   const sort = {};
@@ -41,11 +38,6 @@ router.get('/tasks', auth, async (req, res) => {
   }
 
   try {
-    // const user = await User.findById('5c9d8d5e31713d7ee881d092');
-    // await user.populate('tasks').execPopulate();
-    // console.log(user.tasks);
-
-
     await req.user.populate({
       path: 'tasks',
       match,
@@ -56,24 +48,17 @@ router.get('/tasks', auth, async (req, res) => {
       }
     }).execPopulate();
 
-    // const tasks = await Task.find({owner: req.user._id});
     res.send(req.user.tasks);
   } catch(e) {
     res.status(500).send();
   }
-
-  // Task.find().then((tasks) => {
-  //   res.send(tasks);
-  // }).catch((e) => {
-  //   res.status(500).send();
-  // });
 });
 
+//route to get a specific task from authorized user
 router.get('/tasks/:id', auth, async (req, res) => {
   const _id = req.params.id;
 
   try {
-    // const task = await Task.findById(_id);
     const task = await Task.findOne({_id, owner: req.user._id});
 
     if(!task) {
@@ -83,18 +68,9 @@ router.get('/tasks/:id', auth, async (req, res) => {
   } catch(e) {
     res.status(500).send();
   }
-
-  // Task.findById(_id).then((task) => {
-  //   if(!task) {
-  //     return res.status(404).send();
-  //   }
-  //
-  //   res.send(task);
-  // }).catch((e) => {
-  //   res.status(500).send();
-  // })
 });
 
+//route to update a specific task for an authorized user
 router.patch('/tasks/:id', auth, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ['completed', 'description'];
@@ -107,9 +83,6 @@ router.patch('/tasks/:id', auth, async (req, res) => {
   }
 
   try {
-    // const task = await Task.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true});
-
-    // const task = await Task.findById(req.params.id);
     const task = await Task.findOne({_id: req.params.id, owner: req.user._id});
 
     if(!task) {
@@ -121,19 +94,16 @@ router.patch('/tasks/:id', auth, async (req, res) => {
     });
 
     await task.save();
-
-
     res.send(task);
   } catch(e) {
     res.status(400).send();
   }
 });
 
+//route to delete a specific task from authorized user
 router.delete('/tasks/:id', auth, async (req, res) => {
   try {
-    // const task = await Task.findByIdAndDelete(req.params.id);
     const task = await Task.findOneAndDelete({_id: req.params.id, owner: req.user._id});
-
 
     if(!task) {
       return res.status(404).send();
@@ -144,6 +114,5 @@ router.delete('/tasks/:id', auth, async (req, res) => {
     res.status(500).send();
   }
 });
-
 
 module.exports = router;
